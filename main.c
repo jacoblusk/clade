@@ -1,5 +1,7 @@
 #include "graphics.h"
 #include "error.h"
+#include "gamestate.h"
+#include "entity.h"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -10,9 +12,17 @@ start(void) {
     MSG uMsg;
     BOOL bRunning;
     PGRAPHICS pGraphics;
+    GAMESTATE gameState;
 
     bRunning = TRUE;
     WriteError(L"Hello world! %d\n", 1);
+
+    gameState.m_pCharacter = CreateEntity();
+    if(!gameState.m_pCharacter) {
+        WriteError(L"error: failed to CreateEntity.");
+        ExitProcess(EXIT_FAILURE);
+        return;
+    }
 
     pGraphics = CreateDeviceIndependentResources();
     if(!pGraphics) {
@@ -78,12 +88,13 @@ start(void) {
             DispatchMessage(&uMsg);
         }
 
-        if(FAILED(Render(pGraphics))) {
+        if(FAILED(Render(pGraphics, &gameState))) {
             WriteError(L"error: Render failed.\n");
             return;
         }
     }
 
+    ReleaseEntity(&gameState.m_pCharacter);
     ReleaseDeviceResources(pGraphics);
     ReleaseDeviceIndependentResources(&pGraphics);
     ExitProcess(EXIT_SUCCESS);

@@ -1,8 +1,8 @@
 libraries := -ld2d1 -luser32 -lkernel32 -lwindowscodecs -lole32 -luuid
-linker_flags := -Wl,-estart -Wl,--enable-stdcall-fixup -mconsole -nostdlib -ffreestanding
+linker_flags := -Wl,-estart -Wl,--enable-stdcall-fixup -mconsole -nostdlib
 flags := -Wall -Wextra -std=c89 -pedantic -Wold-style-definition -nostdlib -ffreestanding
 
-main: main.o graphics.o error.o
+main: main.o graphics.o error.o entity.o
 	gcc $^ -o $@ $(flags) $(linker_flags) $(libraries)
 
 main.o: main.c
@@ -14,7 +14,10 @@ graphics.o: graphics.c graphics.h
 error.o: error.c error.h
 	gcc -g -c $< $(flags)
 
+entity.o: entity.c entity.h
+	gcc -g -c $< $(flags)
+
 clean:
-	rm -rf main.o graphics.o error.o main.exe
+	rm -rf main.o graphics.o error.o entity.o main.exe
 
 .PHONY: clean

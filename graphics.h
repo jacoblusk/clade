@@ -10,6 +10,8 @@
 #include <d2d1.h>
 #include <wincodec.h>
 
+#include "gamestate.h"
+
 typedef struct tagGRAPHICS {
     ID2D1Factory *m_pDirect2DFactory;
     ID2D1HwndRenderTarget *m_phRenderTarget;
@@ -21,7 +23,7 @@ PGRAPHICS CreateDeviceIndependentResources(void);
 void ReleaseDeviceIndependentResources(PGRAPHICS *ppGraphics);
 HRESULT CreateDeviceResources(PGRAPHICS pGraphics);
 void ReleaseDeviceResources(PGRAPHICS pGraphics);
-HRESULT Render(PGRAPHICS pGraphics);
+HRESULT Render(PGRAPHICS pGraphics, PGAMESTATE pGameState);
 HRESULT LoadBitmapFromFileW(PGRAPHICS pGraphics, LPWSTR lpszFilename, ID2D1Bitmap **ppBitmap);
 
 #endif

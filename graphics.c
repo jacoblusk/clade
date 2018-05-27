@@ -1,16 +1,24 @@
 #include "graphics.h"
+#include "gamestate.h"
+#include "entity.h"
 #include "error.h"
 
 HRESULT
-Render(PGRAPHICS pGraphics) {
+Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
     HRESULT lResult;
 
+    Update(pGameState);
     lResult = CreateDeviceResources(pGraphics);
     if(SUCCEEDED(lResult)) {
         ID2D1Bitmap *pBitmap = NULL;
         D2D1_COLOR_F fColor = {0.0f, 255.0f, 255.0f, 255.0f};
+
         ID2D1HwndRenderTarget_BeginDraw(pGraphics->m_phRenderTarget);
         {
+            ID2D1SolidColorBrush *pBrush;
+            D2D_COLOR_F fEllipseColor = { 0.0f, 0.0f, 255.0f, 255.0f };
+            D2D1_ELLIPSE ellipse;
+
             ID2D1HwndRenderTarget_Clear(pGraphics->m_phRenderTarget, &fColor);
             lResult = LoadBitmapFromFileW(pGraphics, L"test.png", &pBitmap);
             if(SUCCEEDED(lResult)) {
@@ -22,6 +30,35 @@ Render(PGRAPHICS pGraphics) {
                     D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
                     NULL);
             }
+
+            lResult = ID2D1HwndRenderTarget_CreateSolidColorBrush(
+                pGraphics->m_phRenderTarget,
+                &fEllipseColor,
+                NULL,
+                &pBrush
+            );
+
+            if(FAILED(lResult)) {
+                WriteError(L"error: ID2D1HwndRenderTarget_CreateSolidColorBrush\n");
+            } else {
+                D2D1_POINT_2F point;
+
+                point.x = 200;
+                point.y = pGameState->m_pCharacter->m_yPos;
+                ellipse.point = point;
+                ellipse.radiusX = 30.0f;
+                ellipse.radiusY = 30.0f;
+
+                ID2D1HwndRenderTarget_DrawEllipse(
+                    pGraphics->m_phRenderTarget,
+                    &ellipse,
+                    (ID2D1Brush *) pBrush,
+                    1.0f,
+                    NULL
+                );
+
+                ID2D1SolidColorBrush_Release(pBrush);
+            }
         }
 
         ID2D1HwndRenderTarget_EndDraw(pGraphics->m_phRenderTarget, NULL, NULL);
@@ -29,6 +66,19 @@ Render(PGRAPHICS pGraphics) {
     }
 
     return lResult;
+}
+
+void
+Update(PGAMESTATE pGameState) {
+    if(pGameState->m_pCharacter->m_yPos >= 600) {
+        pGameState->m_pCharacter->m_yPos = 600;
+        pGameState->m_pCharacter->m_ySpeed = -pGameState->m_pCharacter->m_ySpeed;
+    } else if(pGameState->m_pCharacter->m_yPos <= 0) {
+        pGameState->m_pCharacter->m_yPos = 0;
+        pGameState->m_pCharacter->m_ySpeed = 1.0f;
+    }
+
+    pGameState->m_pCharacter->m_yPos += pGameState->m_pCharacter->m_ySpeed;
 }
 
 HRESULT
