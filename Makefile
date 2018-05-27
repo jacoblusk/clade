@@ -1,6 +1,6 @@
 libraries := -ld2d1 -luser32 -lkernel32 -lwindowscodecs -lole32 -luuid
 linker_flags := -Wl,-estart -Wl,--enable-stdcall-fixup -mconsole -nostdlib -ffreestanding
-flags := -Wall -Wextra -std=c89 -pedantic -Wold-style-definition
+flags := -Wall -Wextra -std=c89 -pedantic -Wold-style-definition -nostdlib -ffreestanding
 
 main: main.o graphics.o error.o
 	gcc $^ -o $@ $(flags) $(linker_flags) $(libraries)
