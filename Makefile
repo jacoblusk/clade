@@ -5,6 +5,7 @@ flags := -Wall -Wextra -std=c89 -Wold-style-definition -nostdlib -ffreestanding 
 main: main.o graphics.o ioutil.o entity.o
 	gcc $^ -o $@ $(flags) $(linker_flags) $(libraries)
 
+#LinkedList
 containers/linkedlist_test: containers/linkedlist.o containers/linkedlist_test.o ioutil.o
 	gcc $^ -o containers/linkedlist_test.exe $(flags) $(linker_flags) -lkernel32 -luser32
 
@@ -14,6 +15,17 @@ containers/linkedlist.o: containers/linkedlist.c containers/linkedlist.h
 containers/linkedlist_test.o: containers/linkedlist_test.c containers/linkedlist.c containers/linkedlist.h
 	gcc -g -c $< -o $@ $(flags)
 
+#HashMap
+containers/hashmap_test: containers/hashmap.o containers/hashmap_test.o ioutil.o
+	gcc $^ -o containers/hashmap_test.exe $(flags) $(linker_flags) -lkernel32 -luser32
+
+containers/hashmap.o: containers/hashmap.c containers/hashmap.h
+	gcc -g -c $< -o $@ $(flags)
+
+containers/hashmap_test.o: containers/hashmap_test.c containers/hashmap.c containers/hashmap.h
+	gcc -g -c $< -o $@ $(flags)
+
+#Main
 main.o: main.c gamestate.h ioutil.o graphics.o entity.o
 	gcc -g -c $< $(flags)
 
