@@ -1,5 +1,5 @@
 #include "graphics.h"
-#include "error.h"
+#include "ioutil.h"
 #include "gamestate.h"
 #include "entity.h"
 
@@ -15,18 +15,18 @@ start(void) {
     GAMESTATE gameState;
 
     bRunning = TRUE;
-    WriteError(L"Hello world! %d\n", 1);
+    Errorf(L"Hello world! %d\n", 1);
 
-    gameState.m_pCharacter = CreateEntity();
+    gameState.m_pCharacter = Entity_Create();
     if(!gameState.m_pCharacter) {
-        WriteError(L"error: failed to CreateEntity.");
+        Errorf(L"error: failed to CreateEntity.");
         ExitProcess(EXIT_FAILURE);
         return;
     }
 
     pGraphics = CreateDeviceIndependentResources();
     if(!pGraphics) {
-        WriteError(L"error: CreateDeviceIndependentResources failed.\n");
+        Errorf(L"error: CreateDeviceIndependentResources failed.\n");
         ExitProcess(EXIT_FAILURE);
         return;
     }
@@ -38,7 +38,7 @@ start(void) {
     wc.lpszClassName = L"Window Class";
 
     if(!RegisterClassW(&wc)) {
-        WriteError(L"error: RegisterClassW failed.\n");
+        Errorf(L"error: RegisterClassW failed.\n");
         ExitProcess(EXIT_FAILURE);
         return;
     }
@@ -59,7 +59,7 @@ start(void) {
     );
 
     if(!hWnd) {
-        WriteError(L"error: CreateWindowExW failed.\n");
+        Errorf(L"error: CreateWindowExW failed.\n");
         ExitProcess(EXIT_FAILURE);
         return;
     }
@@ -67,12 +67,12 @@ start(void) {
     SetLastError(0);
     if(!SetWindowLongPtrW(hWnd, 0, (LONG_PTR)pGraphics) &&
         GetLastError() != 0) {
-        WriteError(L"error: SetWindowLongPtrW failed.\n");
+        Errorf(L"error: SetWindowLongPtrW failed.\n");
     }
 
     pGraphics->m_hWnd = hWnd;
     if(FAILED(CreateDeviceResources(pGraphics))) {
-        WriteError(L"error: CreateDeviceResources failed.\n");
+        Errorf(L"error: CreateDeviceResources failed.\n");
         return;
     }
 
@@ -89,12 +89,12 @@ start(void) {
         }
 
         if(FAILED(Render(pGraphics, &gameState))) {
-            WriteError(L"error: Render failed.\n");
+            Errorf(L"error: Render failed.\n");
             return;
         }
     }
 
-    ReleaseEntity(&gameState.m_pCharacter);
+    Entity_Release(&gameState.m_pCharacter);
     ReleaseDeviceResources(pGraphics);
     ReleaseDeviceIndependentResources(&pGraphics);
     ExitProcess(EXIT_SUCCESS);
@@ -116,6 +116,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
                 uSize.height = HIWORD(lParam);
                 ID2D1HwndRenderTarget_Resize(pGraphics->m_phRenderTarget, &uSize);
             }
+
+            lResult = DefWindowProc(hWnd, uMsg, wParam, lParam);
         } break;
         case WM_DESTROY:
             PostQuitMessage(0);

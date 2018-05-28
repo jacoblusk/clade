@@ -1,7 +1,7 @@
 #include "graphics.h"
 #include "gamestate.h"
 #include "entity.h"
-#include "error.h"
+#include "ioutil.h"
 
 HRESULT
 Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
@@ -39,7 +39,7 @@ Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
             );
 
             if(FAILED(lResult)) {
-                WriteError(L"error: ID2D1HwndRenderTarget_CreateSolidColorBrush\n");
+                Errorf(L"error: ID2D1HwndRenderTarget_CreateSolidColorBrush\n");
             } else {
                 D2D1_POINT_2F point;
 
@@ -55,6 +55,12 @@ Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
                     (ID2D1Brush *) pBrush,
                     1.0f,
                     NULL
+                );
+
+                ID2D1HwndRenderTarget_FillEllipse(
+                    pGraphics->m_phRenderTarget,
+                    &ellipse,
+                    (ID2D1Brush *) pBrush
                 );
 
                 ID2D1SolidColorBrush_Release(pBrush);
@@ -101,19 +107,19 @@ LoadBitmapFromFileW(PGRAPHICS pGraphics,
     );
 
     if(FAILED(lResult)) {
-        WriteError(L"error: failed to create IWICBitmapDecoder.\n");
+        Errorf(L"error: failed to create IWICBitmapDecoder.\n");
         return lResult;
     } 
 
     lResult = IWICBitmapDecoder_GetFrame(pDecoder, 0, &pSource);
     if(FAILED(lResult)) {
-        WriteError(L"error: IWICBitmapDecoder_GetFrame failed: %d\n", lResult);
+        Errorf(L"error: IWICBitmapDecoder_GetFrame failed: %d\n", lResult);
         return lResult;
     }
 
     lResult = IWICImagingFactory_CreateFormatConverter(pGraphics->m_pWICImagingFactory, &pConverter);
     if(FAILED(lResult)) {
-        WriteError(L"error: IWICImagingFactory_CreateFormatConverter failed: %d\n", lResult);
+        Errorf(L"error: IWICImagingFactory_CreateFormatConverter failed: %d\n", lResult);
         return lResult;
     }
 
@@ -128,7 +134,7 @@ LoadBitmapFromFileW(PGRAPHICS pGraphics,
     );
 
     if(FAILED(lResult)) {
-        WriteError(L"error: IWICFormatConverter_Initialize failed: %d\n", lResult);
+        Errorf(L"error: IWICFormatConverter_Initialize failed: %d\n", lResult);
         return lResult;
     }
 
@@ -140,7 +146,7 @@ LoadBitmapFromFileW(PGRAPHICS pGraphics,
     );
 
     if(FAILED(lResult)) {
-        WriteError(L"error: ID2D1HwndRenderTarget_CreateBitmapFromWicBitmap failed: %d\n", lResult);
+        Errorf(L"error: ID2D1HwndRenderTarget_CreateBitmapFromWicBitmap failed: %d\n", lResult);
         return lResult;
     }
 
@@ -181,7 +187,7 @@ HRESULT CreateDeviceResources(PGRAPHICS pGraphics) {
             &renderTargetProperties,
             &hWndRenderTargetProperties,
             &pGraphics->m_phRenderTarget))) {
-                WriteError(L"error: ID2D1Factory_CreateHwndRenderTarget\n");
+                Errorf(L"error: ID2D1Factory_CreateHwndRenderTarget\n");
                 return lResult;
         }
     }
@@ -203,7 +209,7 @@ CreateDeviceIndependentResources(void) {
     hProcessHeap = GetProcessHeap();
     pGraphics = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(GRAPHICS));
     if(!pGraphics) {
-        WriteError(L"error: HeapAlloc failed to allocate PGRAPHICS.\n");
+        Errorf(L"error: HeapAlloc failed to allocate PGRAPHICS.\n");
         return NULL;
     }
 
@@ -216,14 +222,8 @@ CreateDeviceIndependentResources(void) {
     );
 
     if(FAILED(lResult)) {
-        BOOL bResult;
-
-        WriteError(L"error: D2D1CreateFactory failed.\n");
-        bResult = HeapFree(hProcessHeap, 0, pGraphics);
-        if(!bResult) {
-            WriteError(L"error: HeapFree failed to free PGRAPHICS.\n");
-        }
-
+        Errorf(L"error: D2D1CreateFactory failed.\n");
+        HeapFree(hProcessHeap, 0, pGraphics);
         return NULL;
     }
 
@@ -238,14 +238,8 @@ CreateDeviceIndependentResources(void) {
     );
 
     if(FAILED(lResult)) {
-        BOOL bResult;
-
-        WriteError(L"error: (%d) CoCreateInstance failed to create IWICImagingFactory.\n", lResult);
-        bResult = HeapFree(hProcessHeap, 0, pGraphics);
-        if(!bResult) {
-            WriteError(L"error: HeapFree failed to free PGRAPHICS.\n");
-        }
-
+        Errorf(L"error: (%d) CoCreateInstance failed to create IWICImagingFactory.\n", lResult);
+        HeapFree(hProcessHeap, 0, pGraphics);
         return NULL;
     }
 
@@ -255,14 +249,11 @@ CreateDeviceIndependentResources(void) {
 void
 ReleaseDeviceIndependentResources(PGRAPHICS *ppGraphics) {
     HANDLE hProcessHeap;
-    BOOL bResult;
 
     ID2D1Factory_Release((*ppGraphics)->m_pDirect2DFactory);
     hProcessHeap = GetProcessHeap();
-    bResult = HeapFree(hProcessHeap, 0, *ppGraphics);
-    if(!bResult) {
-        WriteError(L"error: HeapFree failed to free PGRAPHICS.\n");
+    if(*ppGraphics) {
+        HeapFree(hProcessHeap, 0, *ppGraphics);
+        *ppGraphics = NULL;
     }
-
-    *ppGraphics = NULL;
 }
