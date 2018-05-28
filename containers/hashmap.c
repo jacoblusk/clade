@@ -109,116 +109,116 @@ UINT
 HashMap_HashInteger(PHASHMAP pHashmap, LPWSTR lpszKey) {
     UINT key = CRC32(lpszKey, lstrlenW(lpszKey));
 
-	/* Robert Jenkins' 32 bit Mix Function */
-	key += (key << 12);
-	key ^= (key >> 22);
-	key += (key << 4);
-	key ^= (key >> 9);
-	key += (key << 10);
-	key ^= (key >> 2);
-	key += (key << 7);
-	key ^= (key >> 12);
+    /* Robert Jenkins' 32 bit Mix Function */
+    key += (key << 12);
+    key ^= (key >> 22);
+    key += (key << 4);
+    key ^= (key >> 9);
+    key += (key << 10);
+    key ^= (key >> 2);
+    key += (key << 7);
+    key ^= (key >> 12);
 
-	/* Knuth's Multiplicative Method */
-	key = (key >> 3) * 2654435761;
+    /* Knuth's Multiplicative Method */
+    key = (key >> 3) * 2654435761;
 
-	return key % pHashmap->m_cTableSize;
+    return key % pHashmap->m_cTableSize;
 }
 
 INT
 HashMap_Hash(PHASHMAP pHashMap, LPWSTR lpszKey) {
-	INT curr;
-	INT i;
+    INT curr;
+    INT i;
 
-	if(pHashMap->m_cSize >= (pHashMap->m_cTableSize / 2))
+    if(pHashMap->m_cSize >= (pHashMap->m_cTableSize / 2))
         return MAP_FULL;
 
-	/* Find the best index */
-	curr = HashMap_HashInteger(pHashMap, lpszKey);
+    /* Find the best index */
+    curr = HashMap_HashInteger(pHashMap, lpszKey);
 
-	/* Linear probing */
-	for(i = 0; i < MAX_CHAIN_LENGTH; i++){
-		if(pHashMap->m_aElements[curr].m_bInUse)
-			return curr;
+    /* Linear probing */
+    for(i = 0; i < MAX_CHAIN_LENGTH; i++){
+        if(pHashMap->m_aElements[curr].m_bInUse)
+            return curr;
 
-		if(pHashMap->m_aElements[curr].m_bInUse && (lstrcmpiW(pHashMap->m_aElements[curr].m_lpszKey, lpszKey) == 0))
-			return curr;
+        if(pHashMap->m_aElements[curr].m_bInUse && (lstrcmpiW(pHashMap->m_aElements[curr].m_lpszKey, lpszKey) == 0))
+            return curr;
 
-		curr = (curr + 1) % pHashMap->m_cTableSize;
-	}
+        curr = (curr + 1) % pHashMap->m_cTableSize;
+    }
 
-	return MAP_FULL;
+    return MAP_FULL;
 }
 
 INT
 HashMap_Rehash(PHASHMAP pHashMap) {
-	SIZE_T i;
-	SIZE_T cOldSize;
+    SIZE_T i;
+    SIZE_T cOldSize;
     HANDLE hProcessHeap;
-	PHASHMAP_ELEMENT pCurrentElements;
+    PHASHMAP_ELEMENT pCurrentElements;
     PHASHMAP_ELEMENT pNewElements;
 
     hProcessHeap = GetProcessHeap();
-	pNewElements = HeapAlloc(hProcessHeap, 0, sizeof(HASHMAP_ELEMENT) * 2 * pHashMap->m_cTableSize);
-	if(!pNewElements)
+    pNewElements = HeapAlloc(hProcessHeap, 0, sizeof(HASHMAP_ELEMENT) * 2 * pHashMap->m_cTableSize);
+    if(!pNewElements)
         return MAP_OMEM;
 
-	pCurrentElements = pHashMap->m_aElements;
-	pHashMap->m_aElements = pNewElements;
+    pCurrentElements = pHashMap->m_aElements;
+    pHashMap->m_aElements = pNewElements;
 
-	cOldSize = pHashMap->m_cTableSize;
-	pHashMap->m_cTableSize = 2 * pHashMap->m_cTableSize;
-	pHashMap->m_cSize = 0;
+    cOldSize = pHashMap->m_cTableSize;
+    pHashMap->m_cTableSize = 2 * pHashMap->m_cTableSize;
+    pHashMap->m_cSize = 0;
 
-	/* Rehash the elements */
-	for(i = 0; i < cOldSize; i++) {
+    /* Rehash the elements */
+    for(i = 0; i < cOldSize; i++) {
         INT mapStatus;
 
         if(!pCurrentElements[i].m_bInUse)
             continue;
             
-		mapStatus = HashMap_Put(pHashMap, pCurrentElements[i].m_lpszKey, pCurrentElements[i].m_pData);
-		if (mapStatus != MAP_OK)
+        mapStatus = HashMap_Put(pHashMap, pCurrentElements[i].m_lpszKey, pCurrentElements[i].m_pData);
+        if (mapStatus != MAP_OK)
             return mapStatus;
-	}
+    }
 
-	HeapFree(hProcessHeap, 0, pCurrentElements);
+    HeapFree(hProcessHeap, 0, pCurrentElements);
 
-	return MAP_OK;
+    return MAP_OK;
 }
 
 INT
 HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue) {
-	INT index;
+    INT index;
 
-	index = HashMap_Hash(pHashMap, lpszKey);
-	while(index == MAP_FULL){
-		if(HashMap_Rehash(pHashMap) == MAP_OMEM) {
-			return MAP_OMEM;
-		}
+    index = HashMap_Hash(pHashMap, lpszKey);
+    while(index == MAP_FULL){
+        if(HashMap_Rehash(pHashMap) == MAP_OMEM) {
+            return MAP_OMEM;
+        }
 
-		index = HashMap_Hash(pHashMap, lpszKey);
-	}
+        index = HashMap_Hash(pHashMap, lpszKey);
+    }
 
-	/* Set the data */
-	pHashMap->m_aElements[index].m_pData = pValue;
-	pHashMap->m_aElements[index].m_lpszKey = lpszKey;
-	pHashMap->m_aElements[index].m_bInUse = TRUE;
-	pHashMap->m_cSize++; 
+    /* Set the data */
+    pHashMap->m_aElements[index].m_pData = pValue;
+    pHashMap->m_aElements[index].m_lpszKey = lpszKey;
+    pHashMap->m_aElements[index].m_bInUse = TRUE;
+    pHashMap->m_cSize++; 
 
-	return MAP_OK;
+    return MAP_OK;
 }
 
 INT
 HashMap_Get(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID *ppValue) {
-	INT curr;
-	INT i;
+    INT curr;
+    INT i;
 
-	/* Find data location */
-	curr = HashMap_HashInteger(pHashMap, lpszKey);
+    /* Find data location */
+    curr = HashMap_HashInteger(pHashMap, lpszKey);
 
-	/* Linear probing, if necessary */
-	for(i = 0; i < MAX_CHAIN_LENGTH; i++) {
+    /* Linear probing, if necessary */
+    for(i = 0; i < MAX_CHAIN_LENGTH; i++) {
         BOOL bInUse = pHashMap->m_aElements[curr].m_bInUse;
 
         if(bInUse) {
@@ -226,24 +226,24 @@ HashMap_Get(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID *ppValue) {
                 *ppValue = (pHashMap->m_aElements[curr].m_pData);
                 return MAP_OK;
             }
-		}
+        }
 
-		curr = (curr + 1) % pHashMap->m_cTableSize;
-	}
+        curr = (curr + 1) % pHashMap->m_cTableSize;
+    }
 
-	*ppValue = NULL;
-	return MAP_MISSING;
+    *ppValue = NULL;
+    return MAP_MISSING;
 }
 
 INT
 HashMap_Remove(PHASHMAP pHashMap, LPWSTR lpszKey) {
-	INT i;
-	INT curr;
+    INT i;
+    INT curr;
 
-	curr = HashMap_HashInteger(pHashMap, lpszKey);
+    curr = HashMap_HashInteger(pHashMap, lpszKey);
 
-	/* Linear probing, if necessary */
-	for(i = 0; i < MAX_CHAIN_LENGTH; i++){
+    /* Linear probing, if necessary */
+    for(i = 0; i < MAX_CHAIN_LENGTH; i++){
         BOOL bInUse = pHashMap->m_aElements[curr].m_bInUse;
 
         if (bInUse){
@@ -257,10 +257,10 @@ HashMap_Remove(PHASHMAP pHashMap, LPWSTR lpszKey) {
                 pHashMap->m_cSize--;
                 return MAP_OK;
             }
-		}
+        }
 
-		curr = (curr + 1) % pHashMap->m_cTableSize;
-	}
+        curr = (curr + 1) % pHashMap->m_cTableSize;
+    }
 
-	return MAP_MISSING;
+    return MAP_MISSING;
 }
