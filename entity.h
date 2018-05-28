@@ -13,7 +13,7 @@ typedef struct tagENTITY {
     float m_ySpeed; 
 } ENTITY, *PENTITY;
 
-PENTITY CreateEntity(void);
-BOOL ReleaseEntity(PENTITY *ppEntity);
+PENTITY Entity_Create(void);
+BOOL Entity_Release(PENTITY *ppEntity);
 
 #endif
