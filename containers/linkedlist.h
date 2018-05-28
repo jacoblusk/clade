@@ -7,8 +7,8 @@
 
 #include <windows.h>
 
-typedef VOID (*PNODE_MAPPROC)(LPVOID pValue);
-typedef BOOL (*CPNODE_CMPPROC)(LPVOID pValue1, LPVOID pValue2);
+typedef VOID (*PNODE_MAPPROC)(LPVOID pUserData, LPVOID pValue);
+typedef BOOL (*PNODE_CMPPROC)(LPVOID pValue1, LPVOID pValue2);
 
 typedef struct tagNODE NODE, *PNODE;
 struct tagNODE {
@@ -19,14 +19,14 @@ struct tagNODE {
 typedef struct tagLINKEDLIST {
     PNODE m_pHead;
     SIZE_T m_cLength;
-    CPNODE_CMPPROC m_pfnCmpProc;
+    PNODE_CMPPROC m_pfnCmpProc;
 } LINKEDLIST, *PLINKEDLIST;
 
-PLINKEDLIST LinkedList_Create(CPNODE_CMPPROC pfnCmpProc);
-void LinkedList_Release(PLINKEDLIST *ppLinkedList, PNODE_MAPPROC pfnFreeProc);
+PLINKEDLIST LinkedList_Create(PNODE_CMPPROC pfnCmpProc);
+void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnFreeProc);
 void LinkedList_Append(PLINKEDLIST pLinkedList, LPVOID pValue);
 void LinkedList_Prepend(PLINKEDLIST pLinkedList, LPVOID pValue);
-void LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue);
-void LinkedList_MapFn(PLINKEDLIST pLinkedList, PNODE_MAPPROC pfnMapProc);
+void LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll);
+void LinkedList_MapFn(PLINKEDLIST pLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnMapProc);
 
 #endif
