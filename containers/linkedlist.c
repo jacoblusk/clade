@@ -106,7 +106,7 @@ void LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll) 
     }
 }
 
-void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnFreeProc) {
+void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_FREEPROC pfnFreeProc) {
     HANDLE hProcessHeap;
     PNODE pCurrentNode;
     PNODE pTempNode;

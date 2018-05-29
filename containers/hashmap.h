@@ -14,22 +14,28 @@
 
 #include <windows.h>
 
+typedef VOID (*PHASHMAP_MAPPROC)(LPVOID pUserData, LPVOID pValue);
+typedef PHASHMAP_MAPPROC PHASHMAP_FREEDATAPROC;
+
 typedef struct tagHASHMAP_ELEMENT HASHMAP_ELEMENT, *PHASHMAP_ELEMENT;
 
 struct tagHASHMAP_ELEMENT {
-    LPWSTR m_lpszKey;
-    LPVOID m_pData;
+    LPWSTR           m_lpszKey;
+    LPVOID           m_pData;
     PHASHMAP_ELEMENT m_pNext;
 };
 
 typedef struct tagHASHMAP {
-    SIZE_T            m_cTableSize;
-    SIZE_T            m_cSize;
-    PHASHMAP_ELEMENT  m_aElements; 
+    SIZE_T                m_cTableSize;
+    SIZE_T                m_cSize;
+    PHASHMAP_ELEMENT      m_aElements;
+    PHASHMAP_FREEDATAPROC m_pfnFreeDataProc;
+    LPVOID                m_pUserData;
 } HASHMAP, *PHASHMAP;
 
-PHASHMAP HashMap_Create(void);
-void HashMap_Release(PHASHMAP *ppHashMap);
+PHASHMAP HashMap_Create(LPVOID m_pUserData, PHASHMAP_FREEDATAPROC pfnFreeDataProc);
+VOID HashMap_MapFn(PHASHMAP pHashmap, LPVOID pUserData, PHASHMAP_MAPPROC pfnMapProc);
+VOID HashMap_Release(PHASHMAP *ppHashMap);
 SIZE_T HashMap_Hash(LPWSTR lpszKey);
 INT HashMap_Rehash(PHASHMAP pHashMap);
 VOID HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue);

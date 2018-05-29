@@ -4,35 +4,19 @@
 void start(void) {
     PHASHMAP pHashMap;
     SIZE_T i;
-    SIZE_T cFailCount;
+    INT16 *outValue;
     INT16 aIntArray[1000];
 
-    cFailCount = 0;
-    pHashMap = HashMap_Create();
+    pHashMap = HashMap_Create(NULL, NULL);
     for(i = 0; i < 1000; i++) {
-        WCHAR awcBuffer[1025];
 
         aIntArray[i] = (INT16)i;
-        wsprintfW(awcBuffer, L"test %d", i);
-        HashMap_Put(pHashMap, awcBuffer, &aIntArray[i]);
+        HashMap_Put(pHashMap, L"test 1", &aIntArray[i]);
     }
 
-    for(i = 0; i < 1000; i++) {
-        INT16 *outValue;
-        WCHAR awcBuffer[1025];
+    outValue = HashMap_Get(pHashMap, L"test 1");
+    Printf(L"outValue: %d\n", *outValue);
 
-        wsprintfW(awcBuffer, L"test %d", i);
-        outValue = HashMap_Get(pHashMap, awcBuffer);
-        if(!outValue || *outValue != (INT16)i) {
-            cFailCount++;
-            Errorf(L"failed to get %d\n", i);
-        } else {
-            Errorf(L"got value: %d for (%d)\n", *outValue, i);
-        }
-    }
-
-    Printf(L"Got %d out of %d\n", 1000 - cFailCount, 1000);
-
+    HashMap_Release(&pHashMap);
     ExitProcess(EXIT_SUCCESS);
-    /* HashMap_Release(&pHashMap); */
 }

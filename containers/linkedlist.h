@@ -9,6 +9,7 @@
 
 typedef VOID (*PNODE_MAPPROC)(LPVOID pUserData, LPVOID pValue);
 typedef BOOL (*PNODE_CMPPROC)(LPVOID pValue1, LPVOID pValue2);
+typedef PNODE_MAPPROC PNODE_FREEPROC
 
 typedef struct tagNODE NODE, *PNODE;
 struct tagNODE {
@@ -23,7 +24,7 @@ typedef struct tagLINKEDLIST {
 } LINKEDLIST, *PLINKEDLIST;
 
 PLINKEDLIST LinkedList_Create(PNODE_CMPPROC pfnCmpProc);
-void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnFreeProc);
+void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_FREEPROC pfnFreeProc);
 void LinkedList_Append(PLINKEDLIST pLinkedList, LPVOID pValue);
 void LinkedList_Prepend(PLINKEDLIST pLinkedList, LPVOID pValue);
 void LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll);

@@ -2,7 +2,7 @@
 #include "hashmap.h"
 
 PHASHMAP
-HashMap_Create(void) {
+HashMap_Create(LPVOID pUserData, PHASHMAP_FREEDATAPROC pfnFreeDataProc) {
     PHASHMAP pHashMap;
     HANDLE hProcessHeap;
 
@@ -18,6 +18,8 @@ HashMap_Create(void) {
         return NULL;
     }
 
+    pHashMap->m_pfnFreeDataProc = pfnFreeDataProc;
+    pHashMap->m_pUserData = pUserData;
     pHashMap->m_cTableSize = INITIAL_SIZE;
     pHashMap->m_cSize = 0;
 
@@ -26,10 +28,39 @@ HashMap_Create(void) {
 
 void
 HashMap_Release(PHASHMAP *ppHashMap) {
-    HANDLE hProcessHeap;
-
     if(*ppHashMap && (*ppHashMap)->m_aElements) {
+        HANDLE hProcessHeap;
+        SIZE_T i;
+
         hProcessHeap = GetProcessHeap();
+        for(i = 0; i < (*ppHashMap)->m_cTableSize; i++) {
+            HASHMAP_ELEMENT pElement;
+            pElement = (*ppHashMap)->m_aElements[i];
+
+            if(pElement.m_lpszKey) {
+                PHASHMAP_ELEMENT pCurrentElement;
+                PHASHMAP_ELEMENT pTempElement;
+
+                pTempElement = NULL;
+                HeapFree(hProcessHeap, 0, pElement.m_lpszKey);
+                if((*ppHashMap)->m_pfnFreeDataProc) {
+                    (*ppHashMap)->m_pfnFreeDataProc((*ppHashMap)->m_pUserData, pElement.m_pData);
+                }
+
+                pCurrentElement = pElement.m_pNext;
+                while(pCurrentElement) {
+                    HeapFree(hProcessHeap, 0, pElement.m_lpszKey);
+                    if((*ppHashMap)->m_pfnFreeDataProc) {
+                        (*ppHashMap)->m_pfnFreeDataProc((*ppHashMap)->m_pUserData, pElement.m_pData);
+                    }
+
+                    pTempElement = pCurrentElement->m_pNext;
+                    HeapFree(hProcessHeap, 0, pCurrentElement);
+                    pCurrentElement = pTempElement;
+                }
+            }
+        }
+
         HeapFree(hProcessHeap, 0, (*ppHashMap)->m_aElements);
         (*ppHashMap)->m_aElements = NULL;
 
@@ -66,6 +97,7 @@ void HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue) {
     SIZE_T hash;
     HANDLE hProcessHeap;
     PHASHMAP_ELEMENT pElement;
+    BOOL bKeysDontMatch;
     
     hProcessHeap = GetProcessHeap();
     hash = HashMap_Hash(lpszKey);
@@ -83,7 +115,33 @@ void HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue) {
         pElement->m_lpszKey = lpszKeyCopy;
     } else {
         PHASHMAP_ELEMENT pNewElement;
+        PHASHMAP_ELEMENT pCurrentElement;
+        if(lstrcmpW(pElement->m_lpszKey, lpszKey) == 0) {
+            /* Replace current value */
+            if(pHashMap->m_pfnFreeDataProc) {
+                pHashMap->m_pfnFreeDataProc(pHashMap->m_pUserData, pElement->m_pData);
+            }
 
+            pElement->m_pData = pValue;
+            return;
+        }
+
+        /* Replace if same key */
+        pCurrentElement = pElement;
+        while(pCurrentElement->m_lpszKey && (bKeysDontMatch = lstrcmpW(pCurrentElement->m_lpszKey, lpszKey) != 0)) {
+            pCurrentElement = pCurrentElement->m_pNext;
+        }
+
+        if(!bKeysDontMatch) {
+            if(pHashMap->m_pfnFreeDataProc) {
+                pHashMap->m_pfnFreeDataProc(pHashMap->m_pUserData, pCurrentElement->m_pData);
+            }
+
+            pCurrentElement->m_pData = pValue;
+            return;
+        }
+
+        /* Else create and add */
         pNewElement = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(HASHMAP_ELEMENT));
         if(!pNewElement) {
             Errorf(L"error: HeapAlloc failed for HashMap_Put (pNewElement).\n");
@@ -120,4 +178,39 @@ LPVOID HashMap_Get(PHASHMAP pHashMap, LPWSTR lpszKey) {
     }
 
     return NULL;
+}
+
+BOOL HashMap_Remove(PHASHMAP pHashMap, LPWSTR lpszKey) {
+    SIZE_T hash;
+    HANDLE hProcessHeap;
+    PHASHMAP_ELEMENT pFirstElement;
+    PHASHMAP_ELEMENT pCurrentElement;
+
+    hProcessHeap = GetProcessHeap();
+    hash = HashMap_Hash(lpszKey);
+    pFirstElement = &(pHashMap->m_aElements[hash % pHashMap->m_cTableSize]);
+    pCurrentElement = pFirstElement;
+
+    while(pCurrentElement && lstrcmpW(pCurrentElement->m_lpszKey, lpszKey) != 0) {
+        pCurrentElement = pCurrentElement->m_pNext;
+    }
+
+    if(pCurrentElement != pFirstElement) {
+        if(pHashMap->m_pfnFreeDataProc) {
+            pHashMap->m_pfnFreeDataProc(pHashMap->m_pUserData, pCurrentElement->m_pData);
+        }
+
+        HeapFree(hProcessHeap, 0, pCurrentElement->m_lpszKey);
+        HeapFree(hProcessHeap, 0, pCurrentElement);
+        return TRUE;
+    } else {
+        if(pHashMap->m_pfnFreeDataProc) {
+            pHashMap->m_pfnFreeDataProc(pHashMap->m_pUserData, pCurrentElement->m_pData);
+        }
+
+        HeapFree(hProcessHeap, 0, pCurrentElement->m_lpszKey);
+        return TRUE;
+    }
+
+    return FALSE;
 }
