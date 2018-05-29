@@ -14,11 +14,13 @@
 
 #include <windows.h>
 
-typedef struct tagHASHMAP_ELEMENT {
+typedef struct tagHASHMAP_ELEMENT HASHMAP_ELEMENT, *PHASHMAP_ELEMENT;
+
+struct tagHASHMAP_ELEMENT {
     LPWSTR m_lpszKey;
-    BOOL m_bInUse;
     LPVOID m_pData;
-} HASHMAP_ELEMENT, *PHASHMAP_ELEMENT;
+    PHASHMAP_ELEMENT m_pNext;
+};
 
 typedef struct tagHASHMAP {
     SIZE_T            m_cTableSize;
@@ -28,9 +30,10 @@ typedef struct tagHASHMAP {
 
 PHASHMAP HashMap_Create(void);
 void HashMap_Release(PHASHMAP *ppHashMap);
+SIZE_T HashMap_Hash(LPWSTR lpszKey);
 INT HashMap_Rehash(PHASHMAP pHashMap);
-INT HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue);
-INT HashMap_Get(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID *ppValue);
+VOID HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue);
+LPVOID HashMap_Get(PHASHMAP pHashMap, LPWSTR lpszKey);
 INT HashMap_Remove(PHASHMAP pHashMap, LPWSTR lpszKey);
 
 #endif

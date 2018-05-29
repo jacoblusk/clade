@@ -1,10 +1,12 @@
 libraries := -ld2d1 -luser32 -lkernel32 -lwindowscodecs -lole32 -luuid
 linker_flags := -Wl,-estart -Wl,--enable-stdcall-fixup -mconsole -nostdlib
-flags := -Wall -Wextra -std=c89 -Wold-style-definition -nostdlib -ffreestanding -pedantic
+flags := -Wall -Wextra -std=c89 -Wold-style-definition -nostdlib -ffreestanding -pedantic -Werror
 
 main: main.o graphics.o ioutil.o entity.o
 	gcc $^ -o $@ $(flags) $(linker_flags) $(libraries)
 
+dll_dependency.o: dll_dependency.S
+	gcc -c $< -o $@
 #LinkedList
 containers/linkedlist_test: containers/linkedlist.o containers/linkedlist_test.o ioutil.o
 	gcc $^ -o containers/linkedlist_test.exe $(flags) $(linker_flags) -lkernel32 -luser32
@@ -16,7 +18,7 @@ containers/linkedlist_test.o: containers/linkedlist_test.c containers/linkedlist
 	gcc -g -c $< -o $@ $(flags)
 
 #HashMap
-containers/hashmap_test: containers/hashmap.o containers/hashmap_test.o ioutil.o
+containers/hashmap_test: containers/hashmap.o containers/hashmap_test.o ioutil.o dll_dependency.o
 	gcc $^ -o containers/hashmap_test.exe $(flags) $(linker_flags) -lkernel32 -luser32
 
 containers/hashmap.o: containers/hashmap.c containers/hashmap.h
@@ -39,6 +41,7 @@ entity.o: entity.c entity.h ioutil.o
 	gcc -g -c $< $(flags)
 
 clean:
-	rm -rf main.o graphics.o ioutil.o entity.o main.exe containers/linkedlist.o containers/linkedlist_test.o containers/linkedlist_test.exe
+	rm -rf main.o graphics.o ioutil.o entity.o main.exe containers/linkedlist.o containers/linkedlist_test.o containers/linkedlist_test.exe \
+	containers/hashmap.o containers/hashmap_test.o containers/hashmap_test.exe
 
 .PHONY: clean
