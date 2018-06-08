@@ -24,10 +24,10 @@ typedef struct tagLINKEDLIST {
 } LINKEDLIST, *PLINKEDLIST;
 
 PLINKEDLIST LinkedList_Create(PNODE_CMPPROC pfnCmpProc);
-void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_FREEPROC pfnFreeProc);
-void LinkedList_Append(PLINKEDLIST pLinkedList, LPVOID pValue);
-void LinkedList_Prepend(PLINKEDLIST pLinkedList, LPVOID pValue);
-void LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll);
-void LinkedList_MapFn(PLINKEDLIST pLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnMapProc);
+VOID LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_FREEPROC pfnFreeProc);
+VOID LinkedList_Append(PLINKEDLIST pLinkedList, LPVOID pValue);
+VOID LinkedList_Prepend(PLINKEDLIST pLinkedList, LPVOID pValue);
+VOID LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll);
+VOID LinkedList_MapFn(PLINKEDLIST pLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnMapProc);
 
 #endif

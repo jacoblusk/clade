@@ -5,8 +5,8 @@
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-void WINAPI
-start(void) {
+VOID WINAPI
+start(VOID) {
     HWND hWnd;
     WNDCLASSW wc = {0};
     MSG uMsg;
@@ -15,18 +15,19 @@ start(void) {
     GAMESTATE gameState;
 
     bRunning = TRUE;
-    Errorf(L"Hello world! %d\n", 1);
+    ErrorfW(L"Hello world! %d\n", 1);
 
+    GameTimer_Initialize(&gameState.m_GameTimer);
     gameState.m_pCharacter = Entity_Create();
     if(!gameState.m_pCharacter) {
-        Errorf(L"error: failed to CreateEntity.");
+        ErrorfW(L"error: failed to CreateEntity.");
         ExitProcess(EXIT_FAILURE);
         return;
     }
 
-    pGraphics = CreateDeviceIndependentResources();
+    pGraphics = Graphics_CreateDeviceIndependentResources();
     if(!pGraphics) {
-        Errorf(L"error: CreateDeviceIndependentResources failed.\n");
+        ErrorfW(L"error: CreateDeviceIndependentResources failed.\n");
         ExitProcess(EXIT_FAILURE);
         return;
     }
@@ -38,7 +39,7 @@ start(void) {
     wc.lpszClassName = L"Window Class";
 
     if(!RegisterClassW(&wc)) {
-        Errorf(L"error: RegisterClassW failed.\n");
+        ErrorfW(L"error: RegisterClassW failed.\n");
         ExitProcess(EXIT_FAILURE);
         return;
     }
@@ -59,7 +60,7 @@ start(void) {
     );
 
     if(!hWnd) {
-        Errorf(L"error: CreateWindowExW failed.\n");
+        ErrorfW(L"error: CreateWindowExW failed.\n");
         ExitProcess(EXIT_FAILURE);
         return;
     }
@@ -67,17 +68,24 @@ start(void) {
     SetLastError(0);
     if(!SetWindowLongPtrW(hWnd, 0, (LONG_PTR)pGraphics) &&
         GetLastError() != 0) {
-        Errorf(L"error: SetWindowLongPtrW failed.\n");
+        ErrorfW(L"error: SetWindowLongPtrW failed.\n");
     }
 
     pGraphics->m_hWnd = hWnd;
-    if(FAILED(CreateDeviceResources(pGraphics))) {
-        Errorf(L"error: CreateDeviceResources failed.\n");
+    if(FAILED(Graphics_CreateDeviceResources(pGraphics))) {
+        ErrorfW(L"error: CreateDeviceResources failed.\n");
         return;
+    }
+
+    GameTimer_Start(&gameState.m_GameTimer);
+    BOOL caKeyStates[255];
+    for(BYTE i = 0; i < 255; i++) {
+        caKeyStates[i] = 0;
     }
 
     while(bRunning) {
         BOOL bResult;
+
         while((bResult = PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE)) != 0) {
             if (bResult == -1 ||
                 uMsg.message == WM_QUIT) {
@@ -88,15 +96,35 @@ start(void) {
             DispatchMessage(&uMsg);
         }
 
-        if(FAILED(Render(pGraphics, &gameState))) {
-            Errorf(L"error: Render failed.\n");
+        gameState.m_frameInput.m_cInputLength = 0;
+        for(UCHAR i = 0; i < UCHAR_MAX; i++) {
+            SHORT keyState = GetAsyncKeyState(i);
+            BOOL bKeyIsDown = (keyState & 0x8000) != 0;
+            BOOL bKeyWasDown = caKeyStates[i];
+
+            if((bKeyIsDown || bKeyWasDown) && (gameState.m_frameInput.m_cInputLength < (FRAMEINPUT_MAX_INPUTS - 1))) {
+                PKEY_INPUT pCurrentInput = &gameState.m_frameInput.m_inputs[gameState.m_frameInput.m_cInputLength++];
+                pCurrentInput->m_vkCode = i;
+                pCurrentInput->m_bKeyIsDown = bKeyIsDown;
+                pCurrentInput->m_bKeyWasDown = bKeyWasDown;
+            }
+
+            caKeyStates[i] = keyState;
+        }
+
+        GameTimer_Stop(&gameState.m_GameTimer);
+        GameState_Update(&gameState);
+
+        GameTimer_Reset(&gameState.m_GameTimer);
+        if(FAILED(Graphics_Render(pGraphics, &gameState))) {
+            ErrorfW(L"error: Render failed.\n");
             return;
         }
     }
 
     Entity_Release(&gameState.m_pCharacter);
-    ReleaseDeviceResources(pGraphics);
-    ReleaseDeviceIndependentResources(&pGraphics);
+    Graphics_ReleaseDeviceResources(pGraphics);
+    Graphics_ReleaseDeviceIndependentResources(&pGraphics);
     ExitProcess(EXIT_SUCCESS);
 }
 

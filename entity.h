@@ -8,12 +8,13 @@
 #include <windows.h>
 
 typedef struct tagENTITY {
-    int m_xPos;
-    int m_yPos;
-    float m_ySpeed; 
+    FLOAT m_xPos;
+    FLOAT m_yPos;
+    FLOAT m_ySpeed;
+    BOOL  m_bUp;
 } ENTITY, *PENTITY;
 
-PENTITY Entity_Create(void);
+PENTITY Entity_Create(VOID);
 BOOL Entity_Release(PENTITY *ppEntity);
 
 #endif

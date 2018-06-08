@@ -1,7 +1,8 @@
 #include "ioutil.h"
 #include "entity.h"
 
-PENTITY Entity_Create(void) {
+PENTITY
+Entity_Create(VOID) {
     HANDLE hProcessHeap;
     PENTITY pEntity;
 
@@ -11,18 +12,21 @@ PENTITY Entity_Create(void) {
         return NULL;
     }
 
-    pEntity->m_ySpeed = 1.0f;
+    pEntity->m_bUp = FALSE;
+    pEntity->m_ySpeed = 1;
+    pEntity->m_xPos = 800.0f;
     return pEntity;
 }
 
-BOOL Entity_Release(PENTITY *ppEntity) {
+BOOL
+Entity_Release(PENTITY *ppEntity) {
     BOOL bResult;
     HANDLE hProcessHeap;
 
     hProcessHeap = GetProcessHeap();
     bResult = HeapFree(hProcessHeap, 0, *ppEntity);
     if(!bResult) {
-        Errorf(L"error: HeapFree failed to free PENTITY.\n");
+        ErrorfW(L"error: HeapFree failed to free PENTITY.\n");
     }
 
     *ppEntity = NULL;

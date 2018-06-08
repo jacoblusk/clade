@@ -19,11 +19,11 @@ typedef struct tagGRAPHICS {
     HWND m_hWnd;
 } GRAPHICS, *PGRAPHICS;
 
-PGRAPHICS CreateDeviceIndependentResources(void);
-void ReleaseDeviceIndependentResources(PGRAPHICS *ppGraphics);
-HRESULT CreateDeviceResources(PGRAPHICS pGraphics);
-void ReleaseDeviceResources(PGRAPHICS pGraphics);
-HRESULT Render(PGRAPHICS pGraphics, PGAMESTATE pGameState);
-HRESULT LoadBitmapFromFileW(PGRAPHICS pGraphics, LPWSTR lpszFilename, ID2D1Bitmap **ppBitmap);
+PGRAPHICS Graphics_CreateDeviceIndependentResources(VOID);
+VOID      Graphics_ReleaseDeviceIndependentResources(PGRAPHICS *ppGraphics);
+HRESULT   Graphics_CreateDeviceResources(PGRAPHICS pGraphics);
+VOID      Graphics_ReleaseDeviceResources(PGRAPHICS pGraphics);
+HRESULT   Graphics_Render(PGRAPHICS pGraphics, PGAMESTATE pGameState);
+HRESULT   Graphics_LoadBitmapFromFileW(PGRAPHICS pGraphics, LPWSTR lpszFilename, ID2D1Bitmap **ppBitmap);
 
 #endif

@@ -1,10 +1,12 @@
 #include "linkedlist.h"
 
-static BOOL __DefaultCmpProc(LPVOID pValue1, LPVOID pValue2) {
+static BOOL
+__DefaultCmpProc(LPVOID pValue1, LPVOID pValue2) {
     return (pValue1 == pValue2);
 }
 
-PLINKEDLIST LinkedList_Create(PNODE_CMPPROC pfnCmpProc) {
+PLINKEDLIST
+LinkedList_Create(PNODE_CMPPROC pfnCmpProc) {
     HANDLE hProcessHeap;
     PLINKEDLIST pLinkedList;
 
@@ -21,7 +23,8 @@ PLINKEDLIST LinkedList_Create(PNODE_CMPPROC pfnCmpProc) {
     return pLinkedList;
 }
 
-void LinkedList_Prepend(PLINKEDLIST pLinkedList, LPVOID pValue) {
+VOID
+LinkedList_Prepend(PLINKEDLIST pLinkedList, LPVOID pValue) {
     HANDLE hProcessHeap;
     PNODE pNewNode;
 
@@ -37,7 +40,8 @@ void LinkedList_Prepend(PLINKEDLIST pLinkedList, LPVOID pValue) {
     pLinkedList->m_pHead = pNewNode;
 }
 
-void LinkedList_Append(PLINKEDLIST pLinkedList, LPVOID pValue) {
+VOID
+LinkedList_Append(PLINKEDLIST pLinkedList, LPVOID pValue) {
     HANDLE hProcessHeap;
     PNODE pNewNode;
     PNODE pCurrentNode;
@@ -72,7 +76,8 @@ void LinkedList_Append(PLINKEDLIST pLinkedList, LPVOID pValue) {
     }
 }
 
-void LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll) {
+VOID
+LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll) {
     HANDLE hProcessHeap;
     PNODE pCurrentNode;
     PNODE pPreviousNode;
@@ -106,7 +111,8 @@ void LinkedList_Remove(PLINKEDLIST pLinkedList, LPVOID pValue, BOOL bRemoveAll) 
     }
 }
 
-void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_FREEPROC pfnFreeProc) {
+VOID
+LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_FREEPROC pfnFreeProc) {
     HANDLE hProcessHeap;
     PNODE pCurrentNode;
     PNODE pTempNode;
@@ -128,7 +134,8 @@ void LinkedList_Release(PLINKEDLIST *ppLinkedList, LPVOID pUserData, PNODE_FREEP
     *ppLinkedList = NULL;
 }
 
-void LinkedList_MapFn(PLINKEDLIST pLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnMapProc) {
+VOID
+LinkedList_MapFn(PLINKEDLIST pLinkedList, LPVOID pUserData, PNODE_MAPPROC pfnMapProc) {
     PNODE pCurrentNode;
 
     pCurrentNode = pLinkedList->m_pHead;

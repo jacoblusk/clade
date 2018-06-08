@@ -26,14 +26,13 @@ HashMap_Create(LPVOID pUserData, PHASHMAP_FREEDATAPROC pfnFreeDataProc) {
     return pHashMap;
 }
 
-void
+VOID
 HashMap_Release(PHASHMAP *ppHashMap) {
     if(*ppHashMap && (*ppHashMap)->m_aElements) {
         HANDLE hProcessHeap;
-        SIZE_T i;
 
         hProcessHeap = GetProcessHeap();
-        for(i = 0; i < (*ppHashMap)->m_cTableSize; i++) {
+        for(SIZE_T i = 0; i < (*ppHashMap)->m_cTableSize; i++) {
             HASHMAP_ELEMENT pElement;
             pElement = (*ppHashMap)->m_aElements[i];
 
@@ -93,7 +92,8 @@ static LPWSTR __HashMap_LPWSTRCopy(LPWSTR lpszString) {
     return lpszCopy;
 }
 
-void HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue) {
+VOID
+HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue) {
     SIZE_T hash;
     HANDLE hProcessHeap;
     PHASHMAP_ELEMENT pElement;
@@ -107,7 +107,7 @@ void HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue) {
 
         lpszKeyCopy = __HashMap_LPWSTRCopy(lpszKey);
         if(!lpszKeyCopy) {
-            Errorf(L"error: __HashMap_LPWSTRCopy failed.\n");
+            ErrorfW(L"error: __HashMap_LPWSTRCopy failed.\n");
             return;
         }
 
@@ -144,13 +144,13 @@ void HashMap_Put(PHASHMAP pHashMap, LPWSTR lpszKey, LPVOID pValue) {
         /* Else create and add */
         pNewElement = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(HASHMAP_ELEMENT));
         if(!pNewElement) {
-            Errorf(L"error: HeapAlloc failed for HashMap_Put (pNewElement).\n");
+            ErrorfW(L"error: HeapAlloc failed for HashMap_Put (pNewElement).\n");
             return;
         }
 
         pNewElement->m_lpszKey = __HashMap_LPWSTRCopy(lpszKey);
         if(!pNewElement->m_lpszKey) {
-            Errorf(L"error: __HashMap_LPWSTRCopy failed.\n");
+            ErrorfW(L"error: __HashMap_LPWSTRCopy failed.\n");
             HeapFree(hProcessHeap, 0, pNewElement);
             return;
         }

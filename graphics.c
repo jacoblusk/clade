@@ -4,11 +4,10 @@
 #include "ioutil.h"
 
 HRESULT
-Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
+Graphics_Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
     HRESULT lResult;
 
-    Update(pGameState);
-    lResult = CreateDeviceResources(pGraphics);
+    lResult = Graphics_CreateDeviceResources(pGraphics);
     if(SUCCEEDED(lResult)) {
         ID2D1Bitmap *pBitmap = NULL;
         D2D1_COLOR_F fColor = {0.0f, 255.0f, 255.0f, 255.0f};
@@ -18,17 +17,19 @@ Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
             ID2D1SolidColorBrush *pBrush;
             D2D_COLOR_F fEllipseColor = { 0.0f, 0.0f, 255.0f, 255.0f };
             D2D1_ELLIPSE ellipse;
+            D2D1_RECT_F destinationRectangle = { 0.0f, 0.0f, 32.0f, 32.0f };
+            D2D1_RECT_F sourceRectangle = { 0.0f, 0.0f, 32.0f, 32.0f };
 
             ID2D1HwndRenderTarget_Clear(pGraphics->m_phRenderTarget, &fColor);
-            lResult = LoadBitmapFromFileW(pGraphics, L"test.png", &pBitmap);
+            lResult = Graphics_LoadBitmapFromFileW(pGraphics, L"test.png", &pBitmap);
             if(SUCCEEDED(lResult)) {
                 ID2D1HwndRenderTarget_DrawBitmap(
                     pGraphics->m_phRenderTarget,
                     pBitmap,
-                    NULL,
+                    &destinationRectangle,
                     1.0f,
                     D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
-                    NULL);
+                    &sourceRectangle);
             }
 
             lResult = ID2D1HwndRenderTarget_CreateSolidColorBrush(
@@ -39,11 +40,11 @@ Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
             );
 
             if(FAILED(lResult)) {
-                Errorf(L"error: ID2D1HwndRenderTarget_CreateSolidColorBrush\n");
+                ErrorfW(L"error: ID2D1HwndRenderTarget_CreateSolidColorBrush\n");
             } else {
                 D2D1_POINT_2F point;
 
-                point.x = 200;
+                point.x = pGameState->m_pCharacter->m_xPos;
                 point.y = pGameState->m_pCharacter->m_yPos;
                 ellipse.point = point;
                 ellipse.radiusX = 30.0f;
@@ -68,27 +69,15 @@ Render(PGRAPHICS pGraphics, PGAMESTATE pGameState) {
         }
 
         ID2D1HwndRenderTarget_EndDraw(pGraphics->m_phRenderTarget, NULL, NULL);
-        ID2D1Bitmap_Release(pBitmap);
+        if(pBitmap)
+            ID2D1Bitmap_Release(pBitmap);
     }
 
     return lResult;
 }
 
-void
-Update(PGAMESTATE pGameState) {
-    if(pGameState->m_pCharacter->m_yPos >= 600) {
-        pGameState->m_pCharacter->m_yPos = 600;
-        pGameState->m_pCharacter->m_ySpeed = -pGameState->m_pCharacter->m_ySpeed;
-    } else if(pGameState->m_pCharacter->m_yPos <= 0) {
-        pGameState->m_pCharacter->m_yPos = 0;
-        pGameState->m_pCharacter->m_ySpeed = 1.0f;
-    }
-
-    pGameState->m_pCharacter->m_yPos += pGameState->m_pCharacter->m_ySpeed;
-}
-
 HRESULT
-LoadBitmapFromFileW(PGRAPHICS pGraphics, 
+Graphics_LoadBitmapFromFileW(PGRAPHICS pGraphics, 
     LPWSTR lpszFilename,
     ID2D1Bitmap **ppBitmap) {
 
@@ -107,19 +96,19 @@ LoadBitmapFromFileW(PGRAPHICS pGraphics,
     );
 
     if(FAILED(lResult)) {
-        Errorf(L"error: failed to create IWICBitmapDecoder.\n");
+        ErrorfW(L"error: failed to create IWICBitmapDecoder.\n");
         return lResult;
     } 
 
     lResult = IWICBitmapDecoder_GetFrame(pDecoder, 0, &pSource);
     if(FAILED(lResult)) {
-        Errorf(L"error: IWICBitmapDecoder_GetFrame failed: %d\n", lResult);
+        ErrorfW(L"error: IWICBitmapDecoder_GetFrame failed: %d\n", lResult);
         return lResult;
     }
 
     lResult = IWICImagingFactory_CreateFormatConverter(pGraphics->m_pWICImagingFactory, &pConverter);
     if(FAILED(lResult)) {
-        Errorf(L"error: IWICImagingFactory_CreateFormatConverter failed: %d\n", lResult);
+        ErrorfW(L"error: IWICImagingFactory_CreateFormatConverter failed: %d\n", lResult);
         return lResult;
     }
 
@@ -134,7 +123,7 @@ LoadBitmapFromFileW(PGRAPHICS pGraphics,
     );
 
     if(FAILED(lResult)) {
-        Errorf(L"error: IWICFormatConverter_Initialize failed: %d\n", lResult);
+        ErrorfW(L"error: IWICFormatConverter_Initialize failed: %d\n", lResult);
         return lResult;
     }
 
@@ -146,7 +135,7 @@ LoadBitmapFromFileW(PGRAPHICS pGraphics,
     );
 
     if(FAILED(lResult)) {
-        Errorf(L"error: ID2D1HwndRenderTarget_CreateBitmapFromWicBitmap failed: %d\n", lResult);
+        ErrorfW(L"error: ID2D1HwndRenderTarget_CreateBitmapFromWicBitmap failed: %d\n", lResult);
         return lResult;
     }
 
@@ -157,7 +146,8 @@ LoadBitmapFromFileW(PGRAPHICS pGraphics,
     return lResult;
 }
 
-HRESULT CreateDeviceResources(PGRAPHICS pGraphics) {
+HRESULT
+Graphics_CreateDeviceResources(PGRAPHICS pGraphics) {
     HRESULT lResult;
 
     lResult = S_OK;
@@ -187,7 +177,7 @@ HRESULT CreateDeviceResources(PGRAPHICS pGraphics) {
             &renderTargetProperties,
             &hWndRenderTargetProperties,
             &pGraphics->m_phRenderTarget))) {
-                Errorf(L"error: ID2D1Factory_CreateHwndRenderTarget\n");
+                ErrorfW(L"error: ID2D1Factory_CreateHwndRenderTarget\n");
                 return lResult;
         }
     }
@@ -195,12 +185,13 @@ HRESULT CreateDeviceResources(PGRAPHICS pGraphics) {
     return lResult;
 }
 
-void ReleaseDeviceResources(PGRAPHICS pGraphics) {
+VOID
+Graphics_ReleaseDeviceResources(PGRAPHICS pGraphics) {
     ID2D1HwndRenderTarget_Release(pGraphics->m_phRenderTarget);
 }
 
 PGRAPHICS
-CreateDeviceIndependentResources(void) {
+Graphics_CreateDeviceIndependentResources(VOID) {
     HANDLE hProcessHeap;
     HRESULT lResult;
     PGRAPHICS pGraphics;
@@ -209,7 +200,7 @@ CreateDeviceIndependentResources(void) {
     hProcessHeap = GetProcessHeap();
     pGraphics = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(GRAPHICS));
     if(!pGraphics) {
-        Errorf(L"error: HeapAlloc failed to allocate PGRAPHICS.\n");
+        ErrorfW(L"error: HeapAlloc failed to allocate PGRAPHICS.\n");
         return NULL;
     }
 
@@ -218,11 +209,11 @@ CreateDeviceIndependentResources(void) {
         D2D1_FACTORY_TYPE_SINGLE_THREADED,
         (const IID *)&IID_ID2D1Factory,
         &opts,
-        (void **)&pGraphics->m_pDirect2DFactory
+        (VOID **)&pGraphics->m_pDirect2DFactory
     );
 
     if(FAILED(lResult)) {
-        Errorf(L"error: D2D1CreateFactory failed.\n");
+        ErrorfW(L"error: D2D1CreateFactory failed.\n");
         HeapFree(hProcessHeap, 0, pGraphics);
         return NULL;
     }
@@ -234,11 +225,11 @@ CreateDeviceIndependentResources(void) {
         (LPUNKNOWN) NULL,
         CLSCTX_INPROC_SERVER,
         &IID_IWICImagingFactory,
-        (void **)&pGraphics->m_pWICImagingFactory
+        (VOID **)&pGraphics->m_pWICImagingFactory
     );
 
     if(FAILED(lResult)) {
-        Errorf(L"error: (%d) CoCreateInstance failed to create IWICImagingFactory.\n", lResult);
+        ErrorfW(L"error: (%d) CoCreateInstance failed to create IWICImagingFactory.\n", lResult);
         HeapFree(hProcessHeap, 0, pGraphics);
         return NULL;
     }
@@ -246,8 +237,8 @@ CreateDeviceIndependentResources(void) {
     return pGraphics;
 }
 
-void
-ReleaseDeviceIndependentResources(PGRAPHICS *ppGraphics) {
+VOID
+Graphics_ReleaseDeviceIndependentResources(PGRAPHICS *ppGraphics) {
     HANDLE hProcessHeap;
 
     ID2D1Factory_Release((*ppGraphics)->m_pDirect2DFactory);
