@@ -1,33 +1,8 @@
 #include "gamestate.h"
 #include "entity.h"
 #include "ioutil.h"
-
-VOID
-GameState_Update(PGAMESTATE pGameState) {
-    if(pGameState->m_frameInput.m_cInputLength > 0) {
-        for(UINT32 i = 0; i < pGameState->m_frameInput.m_cInputLength; i++) {
-            KEY_INPUT keyInput = pGameState->m_frameInput.m_inputs[i];
-            if(keyInput.m_vkCode == 'A' && keyInput.m_bKeyIsDown) {
-                pGameState->m_pCharacter->m_xPos -= 128.0f * GameTimer_GetTimeDelta(&pGameState->m_GameTimer);
-            }
-
-            if(keyInput.m_vkCode == 'D' && keyInput.m_bKeyIsDown) {
-                pGameState->m_pCharacter->m_xPos += 128.0f * GameTimer_GetTimeDelta(&pGameState->m_GameTimer);
-            }
-        }
-    }
-
-    pGameState->m_pCharacter->m_yPos += 256 * GameTimer_GetTimeDelta(&pGameState->m_GameTimer) * pGameState->m_pCharacter->m_ySpeed;
-
-    if(pGameState->m_pCharacter->m_yPos >= 600.0) {
-        pGameState->m_pCharacter->m_yPos = 600.0;
-        pGameState->m_pCharacter->m_ySpeed = -pGameState->m_pCharacter->m_ySpeed;
-    }
-
-    if(pGameState->m_pCharacter->m_yPos <= 0.0) {
-        pGameState->m_pCharacter->m_ySpeed = -pGameState->m_pCharacter->m_ySpeed;;
-    }
-}
+#include "vecmath.h"
+#include "graphics.h"
 
 VOID
 GameTimer_Initialize(PGAMETIMER pGameTimer) {

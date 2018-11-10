@@ -15,8 +15,6 @@ start(VOID) {
     GAMESTATE gameState;
 
     bRunning = TRUE;
-    ErrorfW(L"Hello world! %d\n", 1);
-
     GameTimer_Initialize(&gameState.m_GameTimer);
     gameState.m_pCharacter = Entity_Create();
     if(!gameState.m_pCharacter) {
@@ -89,7 +87,9 @@ start(VOID) {
         while((bResult = PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE)) != 0) {
             if (bResult == -1 ||
                 uMsg.message == WM_QUIT) {
+                PrintfW(L"Quit was pressed!\n");
                 bRunning = FALSE;
+                goto end;
             }
 
             TranslateMessage(&uMsg);
@@ -113,15 +113,15 @@ start(VOID) {
         }
 
         GameTimer_Stop(&gameState.m_GameTimer);
-        GameState_Update(&gameState);
-
-        GameTimer_Reset(&gameState.m_GameTimer);
         if(FAILED(Graphics_Render(pGraphics, &gameState))) {
             ErrorfW(L"error: Render failed.\n");
             return;
         }
+        GameTimer_Reset(&gameState.m_GameTimer);
     }
 
+  end:
+    HashMap_Release(&pGraphics->m_pBitmapHashMap);
     Entity_Release(&gameState.m_pCharacter);
     Graphics_ReleaseDeviceResources(pGraphics);
     Graphics_ReleaseDeviceIndependentResources(&pGraphics);

@@ -9,16 +9,21 @@
 #include <windows.h>
 #include <d2d1.h>
 #include <wincodec.h>
-
 #include "gamestate.h"
 
+#include "containers/hashmap.h"
+
+#define UNITS_TO_PIXELS 16
+
 typedef struct tagGRAPHICS {
-    ID2D1Factory *m_pDirect2DFactory;
+    PHASHMAP               m_pBitmapHashMap;
+    ID2D1Factory          *m_pDirect2DFactory;
     ID2D1HwndRenderTarget *m_phRenderTarget;
-    IWICImagingFactory *m_pWICImagingFactory;
-    HWND m_hWnd;
+    IWICImagingFactory    *m_pWICImagingFactory;
+    HWND                   m_hWnd;
 } GRAPHICS, *PGRAPHICS;
 
+VOID      ID2D1HwndRenderTarget_GetPixelSizeFix(ID2D1HwndRenderTarget *, D2D1_SIZE_U *);
 PGRAPHICS Graphics_CreateDeviceIndependentResources(VOID);
 VOID      Graphics_ReleaseDeviceIndependentResources(PGRAPHICS *ppGraphics);
 HRESULT   Graphics_CreateDeviceResources(PGRAPHICS pGraphics);

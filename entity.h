@@ -6,15 +6,15 @@
 #define UNICODE
 
 #include <windows.h>
+#include "vecmath.h"
 
 typedef struct tagENTITY {
-    FLOAT m_xPos;
-    FLOAT m_yPos;
-    FLOAT m_ySpeed;
-    BOOL  m_bUp;
+    FVECTOR2 m_v2Pos;
+    FVECTOR2 m_v2Vel;
+    BOOL     m_bUp;
 } ENTITY, *PENTITY;
 
 PENTITY Entity_Create(VOID);
-BOOL Entity_Release(PENTITY *ppEntity);
+BOOL    Entity_Release(PENTITY *ppEntity);
 
 #endif

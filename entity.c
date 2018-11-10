@@ -13,8 +13,11 @@ Entity_Create(VOID) {
     }
 
     pEntity->m_bUp = FALSE;
-    pEntity->m_ySpeed = 1;
-    pEntity->m_xPos = 800.0f;
+    pEntity->m_v2Vel.x = 0.0f;
+    pEntity->m_v2Vel.y = 0.0f;
+
+    pEntity->m_v2Pos.x = 300.0f;
+    pEntity->m_v2Pos.y = 300.0f;
     return pEntity;
 }
 

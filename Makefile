@@ -2,9 +2,9 @@ game_libraries := -ld2d1 -luser32 -lkernel32 -lwindowscodecs -lole32 -luuid
 server_libraries := -lws2_32 -lkernel32 -luser32
 
 linker_flags := -Wl,-estart -Wl,--enable-stdcall-fixup -mconsole -nostdlib
-flags := -Wall -Wextra -std=c99 -Wold-style-definition -nostdlib -ffreestanding -pedantic -Werror
+flags := -Wall -Wextra -std=c11 -Wold-style-definition -nostdlib -ffreestanding -pedantic -Werror
 
-main: obj/main.o obj/graphics.o obj/ioutil.o obj/entity.o obj/gamestate.o obj/chkstk.o
+main: obj/main.o obj/graphics.o obj/ioutil.o obj/entity.o obj/gamestate.o obj/chkstk.o obj/vecmath.o obj/containers/hashmap.o obj/intrinsics.o
 	gcc $^ -o $@ $(flags) $(linker_flags) $(game_libraries)
 
 obj/chkstk.o: chkstk.S
@@ -40,10 +40,16 @@ obj/graphics.o: graphics.c graphics.h obj/ioutil.o
 obj/ioutil.o: ioutil.c ioutil.h
 	gcc -g -c $< -o $@ $(flags)
 
-obj/entity.o: entity.c entity.h obj/ioutil.o
+obj/entity.o: entity.c entity.h obj/ioutil.o obj/vecmath.o
 	gcc -g -c $< -o $@ $(flags)
 
 obj/gamestate.o: gamestate.c gamestate.h obj/graphics.o obj/ioutil.o
+	gcc -g -c $< -o $@ $(flags)
+
+obj/vecmath.o: vecmath.c vecmath.h
+	gcc -g -c $< -o $@ $(flags)
+
+obj/intrinsics.o: intrinsics.c intrinsics.h
 	gcc -g -c $< -o $@ $(flags)
 
 #Server
@@ -54,7 +60,7 @@ obj/server/main.o: server/main.c
 	gcc -g -c $< -o $@ $(flags)
 
 clean:
-	rm -rf obj/*.o obj/server/*.o *.exe
+	rm -rf obj/*.o obj/server/*.o obj/containers/*.o *.exe
 
 .PHONY: clean
 

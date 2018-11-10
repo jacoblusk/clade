@@ -1,5 +1,27 @@
 #include "ioutil.h"
 
+LPVOID *
+__memset(LPVOID pDest, INT value, SIZE_T cLength) {
+    if(cLength) {
+        PCHAR d = pDest;
+        do {
+            *d++ = value;
+        } while(--cLength);
+    }
+
+    return pDest;
+}
+
+#undef ZeroMemory
+#ifndef ZeroMemory
+#define ZeroMemory __ZeroMemory
+#endif
+
+inline VOID
+__ZeroMemory(LPVOID pDest, SIZE_T cLength) {
+    (VOID)__memset(pDest, 0, cLength);
+}
+
 VOID
 PrintfA2W(const LPSTR lpszFmt, ...) {
     HANDLE hStdOut;

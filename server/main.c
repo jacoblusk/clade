@@ -9,25 +9,6 @@
 
 #define BUFFER_SIZE 1024
 
-void CALLBACK CompletionROUTINE(
-  DWORD dwError, 
-  DWORD cbTransferred, 
-  LPWSAOVERLAPPED lpOverlapped, 
-  DWORD dwFlags
-) {
-    UNREFERENCED_PARAMETER(dwError);
-    UNREFERENCED_PARAMETER(dwFlags);
-    UNREFERENCED_PARAMETER(lpOverlapped);
-
-    CHAR *buffer = (CHAR *)lpOverlapped->hEvent;
-    for(DWORD i = 0; i < cbTransferred; i++) {
-        PrintfW(L"%d\n", buffer[i]);
-    }
-
-    PrintfA2W("%5s", buffer);
-}
-
-
 VOID start(VOID) {
     WSADATA wsaData;
     WORD wVersionRequested;
@@ -35,6 +16,7 @@ VOID start(VOID) {
     SOCKET listenSocket;
     SOCKADDR_IN service;
     SOCKADDR_IN sender;
+    WSAEVENT aEvent[WSA_MAXIMUM_WAIT_EVENTS];
     WSAOVERLAPPED overlapped;
     CHAR recieveBuffer[BUFFER_SIZE];
     INT senderAddrSize;
@@ -69,32 +51,22 @@ VOID start(VOID) {
     wsaBuffer.buf = recieveBuffer;
     wsaBuffer.len = BUFFER_SIZE;
     senderAddrSize = sizeof(sender);
-    DWORD cbTransfered;
 
-    iResult = WSARecvFrom(
-        listenSocket, 
-        &wsaBuffer, 
-        1,
-        (LPDWORD) NULL, 
-        &dwFlags, 
-        (PSOCKADDR)&sender, 
-        &senderAddrSize, 
-        &overlapped,
-        CompletionROUTINE
-    );
+    while(TRUE) {
+        iResult = WSARecvFrom(
+            listenSocket, 
+            &wsaBuffer, 
+            1,
+            (LPDWORD) NULL, 
+            &dwFlags, 
+            (PSOCKADDR)&sender, 
+            &senderAddrSize, 
+            &overlapped,
+            NULL
+        );
 
-    if(iResult != 0) {
-        BOOL bResult;
-        INT error = WSAGetLastError();
-        if(error != WSA_IO_PENDING) {
+        if(iResult != WSA_IO_PENDING) {
             ErrorfW(L"WSARecvFrom failed with error: %ld\n", error);
-            goto fail;
-        }
-
-        while(TRUE) {
-            bResult = WSAGetOverlappedResult(listenSocket, &overlapped, &cbTransfered, FALSE, &dwFlags);
-            if(bResult)
-                break;
         }
     }
 
